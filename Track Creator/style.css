@@ -1,0 +1,47 @@
+body{
+    margin: 0
+}
+
+canvas{
+    float: left;
+    margin-left: 3px;
+    margin-top: 3px;
+    width: 940px;
+    height: 940px;
+    outline: 2px solid blue
+}
+
+form{
+    float: left;
+    width: 110px;
+    margin: 10px 0 10px 0;
+}
+
+#options{
+    float: left;
+    margin-left: 10px;
+    display: grid;
+    height: 400px;
+    grid-template-rows: 180px 40px 40px
+}
+
+#tools{
+    display: grid;
+    grid-template-rows: 20px 20px 20px;
+    margin-top: 20px;
+}
+
+#undo{
+    width: 140px;
+    height: 25px;
+}
+
+#close-wall{
+    width: 140px;
+    height: 25px;
+}
+
+#export{
+    width: 140px;
+    height: 25px;
+}

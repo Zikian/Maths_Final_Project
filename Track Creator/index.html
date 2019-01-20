@@ -1,0 +1,51 @@
+<html>
+    <link rel="stylesheet" href="style.css">
+    
+    <canvas></canvas>
+    
+    <div id="options">
+        <form>
+            <label>
+                <input type="radio" id="outer-wall" name="wall-selector" checked>
+                Outer Wall
+            </label>
+            
+            <label>
+                <input type="radio" id="inner-wall" name="wall-selector">
+                Inner Wall
+            </label>
+
+            <div id="tools">
+                <span>Tools</span>
+
+                <label>
+                    <input type="radio" id="draw-tool" name="tool" checked>
+                    Draw
+                </label>
+                
+                <label>
+                    <input type="radio" id="move-tool" name="tool">
+                    Move Point
+                </label>
+                
+                <label>
+                    <input type="radio" id="delete-tool" name="tool">
+                    Delete Point
+                </label>
+
+                <label>
+                    <input type="radio" id="insert-tool" name="tool">
+                    Insert Point
+                </label>
+            </div>
+        </form>
+    
+        <button id="undo" disabled>UNDO (CTRL+Z)</button>
+
+        <button id="close-wall">Close Wall (Shift+Click)</button>
+        
+        <button id="export">Export Track</button>
+    </div>
+
+    <script src="script.js"></script>
+</html>
