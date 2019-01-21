@@ -9,20 +9,15 @@ class Car():
         self.rot = 0
         self.pos = pos
         self.vel = 5
-        self.rot_speed = None
-        self.direction = Vector2(0, 1)
+        self.direction = Vector2(1, 0)
 
         self.image_orig = pg.Surface((c.CAR_W + 1, c.CAR_H + 1))  
-        self.image_orig.set_colorkey(c.BLACK)    
+        self.image_orig.set_colorkey(c.BLACK)
         pg.draw.rect(self.image_orig, c.GREEN, (0, 0, c.CAR_W, c.CAR_H), 2)
         
-        image = self.image_orig.copy()  
-        image.set_colorkey(c.BLACK)  
-        self.rect = image.get_rect()
-        self.rotate(-90)
+        self.rect = self.image_orig.get_rect()
 
-        self.sensor_directions = [None for i in range(0, 5)]
-        self.sensor_ends = [None for i in range(0, 5)]
+        self.sensors = [Sensor(90 - i*45) for i in range(0, 5)]
         self.sensor_origin = Vector2()
 
     def update(self):
@@ -31,73 +26,64 @@ class Car():
         self.updateSensors()
 
     def updateSensors(self):
-        currAngle = 90
-        for i in range(0, 5):
-            self.sensor_directions[i] = self.direction.getRotated(currAngle)
+        self.sensor_origin = self.pos + self.direction * c.CAR_H
 
-            sensor_end = self.sensor_origin - self.sensor_directions[i] * c.SENSOR_RANGE
-            self.sensor_ends[i] = self.getWallIntersection(c.outer_wall, sensor_end) 
-            if(self.sensor_ends[i] == None):
-                self.sensor_ends[i] = self.getWallIntersection(c.inner_wall, sensor_end)
+        for sensor in self.sensors:
+            sensor.direction = self.direction.get_rotated(sensor.angle)
 
-            currAngle -= 45
+            #End point of sensor if there is no collision
+            sensor_end = self.sensor_origin + sensor.direction * c.SENSOR_RANGE
+
+            sensor.end_point = self.getWallIntersection(c.outer_wall, sensor_end) 
+            if(not sensor.end_point):
+                sensor.end_point = self.getWallIntersection(c.inner_wall, sensor_end)
+
+            #No collision
+            if(not sensor.end_point):
+                sensor.end_point = sensor_end
 
     def getWallIntersection(self, walls, sensor_end):
         for i, point in enumerate(walls):
             if i != len(walls) - 1:
-                wallP1 = Vector2(*point)
-                wallP2 = Vector2(*walls[i+1])
+                wall_p1 = Vector2(*point)
+                wall_p2 = Vector2(*walls[i+1])
 
-                intersection = get_line_intersection(self.sensor_origin, sensor_end, wallP1, wallP2)
-                if(intersection != None):
+                intersection = get_line_intersection(self.sensor_origin, sensor_end, wall_p1, wall_p2)
+                
+                if(intersection):
                     return intersection
         
         return None
-    
-    # def innerWallIntersection(self, sensor_end):
-    #     pass
-    #     intersections = []
-    #     for intersection in intersections:
-    #         distance = Vector2.distance(self.sensor_origin, intersection)
-    #         if(minDistance == None):
-    #             minDistance = distance
-    #             minDistanceIntersection = intersection
-    #         else:
-    #             if(distance < minDistance):
-    #                 minDistance = distance
-    #                 minDistanceIntersection = intersection
-
-    #     return minDistanceIntersection
 
     def move(self):
-        self.pos -= self.direction * self.vel
+        self.pos += self.direction * self.vel
         
     def rotate(self, angle):
-        self.rot += angle
-        self.rot %= 360
+        self.rot = (self.rot + angle) % 360
         self.direction.rotate(angle)
 
     def draw(self):
-        old_center = (self.pos.x, self.pos.y)  
+        self.draw_car_rect() 
+        self.draw_sensors()
+
+    def draw_car_rect(self):
         new_image = pg.transform.rotate(self.image_orig , self.rot)  
         self.rect = new_image.get_rect()  
-        self.rect.center = old_center    
-        c.screen.blit(new_image , self.rect) 
+        self.rect.center = (self.pos.x, self.pos.y)     
+        c.screen.blit(new_image , self.rect)
 
-        self.sensor_origin = Vector2(self.pos.x - self.direction.x * c.CAR_W,
-                                     self.pos.y - self.direction.y * c.CAR_W)
+    def draw_sensors(self):
         for i in range(0, 5):
-            sensor_end = self.sensor_origin - self.sensor_directions[i] * c.SENSOR_RANGE
-            
-            if(self.sensor_ends[i] != None):
-                x2 = self.sensor_ends[i].x
-                y2 = self.sensor_ends[i].y
-                pg.draw.circle(c.screen, c.GREEN, (int(x2), int(y2)), 5)
-            else:
-                x2 = sensor_end.x
-                y2 = sensor_end.y
-
+            x2 = self.sensors[i].end_point.x
+            y2 = self.sensors[i].end_point.y
+            pg.draw.circle(c.screen, c.GREEN, (int(x2), int(y2)), 5)
             pg.draw.line(c.screen, c.WHITE, (self.sensor_origin.x, self.sensor_origin.y), (x2, y2), 1)
+
+class Sensor():
+    def __init__(self, angle):
+        self.angle = angle
+        self.direction = Vector2()
+        self.end_point = Vector2()
 
 
         

@@ -31,7 +31,7 @@ class Vector2():
         self.x = x * cos + y * sin
         self.y = y * cos - x * sin
 
-    def getRotated(self, angle):
+    def get_rotated(self, angle):
         angle *= math.pi / 180
         return Vector2(
             self.x * math.cos(angle) + self.y * math.sin(angle),

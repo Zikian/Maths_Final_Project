@@ -2,7 +2,6 @@ import pygame as pg
 import config as c
 from basetypes import *
 import car
-import track
 
 class Main():
     def __init__(self):
@@ -10,11 +9,14 @@ class Main():
         c.screen = pg.display.set_mode((c.SCREEN_SIZE.x, c.SCREEN_SIZE.y))
         c.clock = pg.time.Clock()
         c.car = car.Car(Vector2(*c.START_POS), 0)
-        c.track = track.Track()
 
     def draw(self):
         c.screen.fill(c.BLACK)
-        c.track.draw()
+
+        # Draw Track
+        pg.draw.aalines(c.screen, c.WHITE, True, c.track_data["innerWall"], 1)
+        pg.draw.aalines(c.screen, c.WHITE, True, c.track_data["outerWall"], 1)
+
         c.car.draw()  
 
     def check_for_quit(self):
@@ -38,4 +40,5 @@ class Main():
             if self.check_for_quit():
                 break
 
+            #Update the display
             pg.display.flip()

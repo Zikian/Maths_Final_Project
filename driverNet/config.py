@@ -18,7 +18,7 @@ clock = None
 delta_time = 0
 
 SCREEN_SIZE = Vector2(1000, 1000)
-CAR_W = 25
-CAR_H = 40
+CAR_W = 40
+CAR_H = 25
 START_POS = (477, 825)
 SENSOR_RANGE = 100
