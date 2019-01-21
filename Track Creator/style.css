@@ -22,7 +22,7 @@ form{
     margin-left: 10px;
     display: grid;
     height: 400px;
-    grid-template-rows: 180px 40px 40px
+    grid-template-rows: 200px 40px 40px 40px
 }
 
 #tools{
@@ -31,17 +31,7 @@ form{
     margin-top: 20px;
 }
 
-#undo{
-    width: 140px;
-    height: 25px;
-}
-
-#close-wall{
-    width: 140px;
-    height: 25px;
-}
-
-#export{
+#undo, #import, #export, #close-wall{
     width: 140px;
     height: 25px;
 }

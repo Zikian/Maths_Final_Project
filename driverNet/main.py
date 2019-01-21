@@ -8,16 +8,22 @@ class Main():
         pg.init()
         c.screen = pg.display.set_mode((c.SCREEN_SIZE.x, c.SCREEN_SIZE.y))
         c.clock = pg.time.Clock()
-        c.car = car.Car(Vector2(*c.START_POS), 0)
+        c.cars = [car.Car(Vector2(*c.START_POS)) for _ in range(1)]
 
     def draw(self):
         c.screen.fill(c.BLACK)
 
         # Draw Track
-        pg.draw.aalines(c.screen, c.WHITE, True, c.track_data["innerWall"], 1)
-        pg.draw.aalines(c.screen, c.WHITE, True, c.track_data["outerWall"], 1)
+        pg.draw.aalines(c.screen, c.RED, True, c.inner_wall, 1)
+        pg.draw.aalines(c.screen, c.RED, True, c.outer_wall, 1)
 
-        c.car.draw()  
+        # Draw Checkpoints
+        for checkpoint in c.checkpoints:
+            p1 = (checkpoint[0][0], checkpoint[0][1])
+            p2 = (int(checkpoint[1][0]), int(checkpoint[1][1]))
+            pg.draw.line(c.screen, c.WHITE, p1, p2)
+
+        [c.cars[i].draw() for i in range(1)]
 
     def check_for_quit(self):
         """event manager for quitting the app or going back to menu"""
@@ -34,7 +40,7 @@ class Main():
             c.delta_time = c.clock.tick(60)
             c.keys = pg.key.get_pressed()
 
-            c.car.update()
+            [c.cars[i].update() for i in range(1)]
             self.draw()
 
             if self.check_for_quit():

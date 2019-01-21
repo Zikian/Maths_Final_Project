@@ -1,5 +1,6 @@
 from basetypes import Vector2
 import config as c
+import math
 
 def get_line_intersection(p1, p2, p3, p4):
         x1 = p1.x
@@ -29,3 +30,9 @@ def get_line_intersection(p1, p2, p3, p4):
 
 def det(a, b, c, d):
     return a * d - b * c
+
+def clamp(a, b, x):
+    return max(a, min(b, x))
+
+def sigmoid(x):
+    return 1 / (1 + math.pow(math.e, -x))
