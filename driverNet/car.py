@@ -2,14 +2,15 @@ import math
 import config as c
 import pygame as pg
 from basetypes import Vector2
-from utils import get_line_intersection, clamp
+from utils import get_line_intersection, clamp, normalize
 import neural_net
 
 class Car():
-    def __init__(self, pos):
+    def __init__(self, index):
+        self.index = index
         self.rot = 0
-        self.pos = pos
-        self.vel = 1.5
+        self.pos = Vector2(*c.START_POS)
+        self.vel = 2
         self.direction = Vector2(1, 0)
 
         self.image_orig = pg.Surface((c.CAR_W + 1, c.CAR_H + 1))  
@@ -20,26 +21,37 @@ class Car():
 
         self.sensors = [Sensor(90 - i*45) for i in range(0, 5)]
         self.sensor_origin = Vector2()
-        self.updateSensors()
+        self.update_sensors()
 
         self.net = neural_net.NeuralNet(5, 5, 2)
 
         self.collided = False
         self.checkpoint_count = 0
 
+        self.front_left = Vector2()
+        self.front_right = Vector2()
+        self.back_left = Vector2()
+        self.front_left = Vector2()
+
     def update(self):
         if(not self.collided):
-            inputs = [1 / self.sensors[i].length for i in range(5)]
+            inputs = [self.sensors[i].length for i in range(5)]
             outputs = self.net.forward_propagation(inputs)
 
-            self.accelerate(outputs[0] / 10)
+            #self.accelerate(outputs[0])
             self.move()
             self.rotate(outputs[1])
-            self.updateSensors()
-        self.collided = self.checkCollisions()
+            self.update_sensors()
+            self.update_corner_positions()
+            self.checkpoint_collisions()
+            self.collided = self.check_collisions()
+            if(self.collided):
+                c.crashed_cars += 1
+
 
     def accelerate(self, factor):
-        self.vel = clamp(0, 3, self.vel + factor)
+        factor += 0.5
+        self.vel = clamp(1, 3, self.vel * factor/10)
 
     def move(self):
         self.pos += self.direction * self.vel
@@ -47,10 +59,20 @@ class Car():
     def rotate(self, angle):
         if(angle < 0.5):
             angle *= -1
+        angle *= 2
         self.rot = (self.rot + angle) % 360
         self.direction.rotate(angle)
 
-    def updateSensors(self):
+    def update_corner_positions(self):
+        direction_normal = self.direction.get_rotated(90)
+        half_width = c.CAR_W / 2
+        half_height = c.CAR_H / 2
+        self.front_left = self.pos + self.direction * half_width + direction_normal * half_height
+        self.front_right = self.pos + self.direction * half_width - direction_normal * half_height
+        self.back_right = self.pos - self.direction * half_width - direction_normal * half_height
+        self.back_left = self.pos - self.direction * half_width + direction_normal * half_height
+
+    def update_sensors(self):
         self.sensor_origin = self.pos + self.direction * c.CAR_W / 2
 
         for sensor in self.sensors:
@@ -70,36 +92,42 @@ class Car():
             else:
                 sensor.length = Vector2.distance(self.sensor_origin, sensor.end_point)
 
-    def checkCollisions(self):
-        direction_normal = self.direction.get_rotated(90)
-        front_left = self.pos + self.direction * c.CAR_W / 2 + direction_normal * c.CAR_H / 2
-        front_right = self.pos + self.direction * c.CAR_W / 2 - direction_normal * c.CAR_H / 2
-        back_right = self.pos - self.direction * c.CAR_W / 2 - direction_normal * c.CAR_H / 2
-        back_left = self.pos - self.direction * c.CAR_W / 2 + direction_normal * c.CAR_H / 2
-
+    def check_collisions(self):
         for i, point in enumerate(c.outer_wall):
             if i != len(c.outer_wall) - 1:
                 wall_p1 = Vector2(*point)
                 wall_p2 = Vector2(*c.outer_wall[i+1])
-
-                if(get_line_intersection(front_left, front_right, wall_p1, wall_p2) or
-                   get_line_intersection(front_right, back_right, wall_p1, wall_p2) or
-                   get_line_intersection(back_right, back_left, wall_p1, wall_p2) or
-                   get_line_intersection(back_right, front_left, wall_p1, wall_p2)):
-                    return True 
+                if(self.is_colliding(wall_p1, wall_p2)):
+                    return True
 
         for i, point in enumerate(c.inner_wall):
             if i != len(c.inner_wall) - 1:
                 wall_p1 = Vector2(*point)
                 wall_p2 = Vector2(*c.inner_wall[i+1])
+                if(self.is_colliding(wall_p1, wall_p2)):
+                    return True
 
-                if(get_line_intersection(front_left, front_right, wall_p1, wall_p2) or
-                   get_line_intersection(front_right, back_right, wall_p1, wall_p2) or
-                   get_line_intersection(back_right, back_left, wall_p1, wall_p2) or
-                   get_line_intersection(back_right, front_left, wall_p1, wall_p2)):
-                    return True 
-               
+        return False
 
+    def is_colliding(self, p1, p2):
+        return (get_line_intersection(self.front_left, self.front_right, p1, p2) or
+                get_line_intersection(self.front_right, self.back_right, p1, p2) or
+                get_line_intersection(self.back_right, self.back_left, p1, p2) or
+                get_line_intersection(self.back_right, self.front_left, p1, p2))
+
+    def checkpoint_collisions(self):
+        if(self.checkpoint_count != len(c.checkpoints)):
+            checkpoint = c.checkpoints[self.checkpoint_count]
+            if(self.is_colliding(Vector2(*checkpoint[0]), Vector2(*checkpoint[1]))):
+                self.checkpoint_count += 1
+                if(self.checkpoint_count > c.max_checkpoint_count):
+                    c.max_checkpoint_count = self.checkpoint_count
+                
+                for i in range(5):
+                    if(self.checkpoint_count > c.high_scores[i]):
+                        c.high_scores[i] = self.checkpoint_count
+                        c.fittest_cars[i] = self.index
+                        break
 
     def getWallIntersection(self, walls, sensor_end):
         for i, point in enumerate(walls):
@@ -117,7 +145,9 @@ class Car():
 
     def draw(self):
         self.draw_car_rect() 
-        self.draw_sensors()
+
+        if(self.index == c.fittest_cars[0] and not self.collided):
+            self.draw_sensors()
 
     def draw_car_rect(self):
         new_image = pg.transform.rotate(self.image_orig , self.rot)  

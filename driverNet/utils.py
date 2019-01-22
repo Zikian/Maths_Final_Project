@@ -36,3 +36,11 @@ def clamp(a, b, x):
 
 def sigmoid(x):
     return 1 / (1 + math.pow(math.e, -x))
+
+def normalize(x, m, M):
+    if(x < m): 
+        x = m
+    elif(x > M):
+        x = M
+        
+    return (x-m)/(M-m)
