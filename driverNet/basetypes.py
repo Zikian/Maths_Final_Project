@@ -17,7 +17,6 @@ class Vector2():
     def __mul__(self, other):
         return Vector2(self.x * other, self.y * other)
 
-
     def normalize(self):
         magnitude = self.magnitude(self);
         return Vector2(self.x / magnitude, self.y / magnitude);
@@ -38,6 +37,12 @@ class Vector2():
             self.y * math.cos(angle) - self.x * math.sin(angle)
         )
 
+    def copy(self):
+        return Vector2(self.x, self.y)
+
+    def get_tuple(self):
+        return (self.x, self.y)
+
     @classmethod
     def magnitude(self, v):
         return math.sqrt(v.x**2 + v.y**2)
@@ -53,3 +58,7 @@ class Vector2():
     @classmethod
     def distance(self, v1, v2):
         return math.sqrt((v2.x - v1.x) ** 2 + (v2.y - v1.y) ** 2)
+
+    @classmethod
+    def sqr_distance(self, v1, v2):
+        return math.pow(v2.x - v1.x, 2) + math.pow(v2.y - v1.y, 2)

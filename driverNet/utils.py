@@ -1,6 +1,7 @@
 from basetypes import Vector2
 import config as c
 import math
+import random
 
 def get_line_intersection(p1, p2, p3, p4):
         x1 = p1.x
@@ -36,11 +37,3 @@ def clamp(a, b, x):
 
 def sigmoid(x):
     return 1 / (1 + math.pow(math.e, -x))
-
-def normalize(x, m, M):
-    if(x < m): 
-        x = m
-    elif(x > M):
-        x = M
-        
-    return (x-m)/(M-m)

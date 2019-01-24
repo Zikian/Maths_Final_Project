@@ -61,44 +61,60 @@ class Main():
     def reset_simulation(self):
         c.crashed_cars = 0
         c.max_checkpoint_count = 0
-        fittest_cars = [0, 1, 2, 3, 4]
-        c.high_scores = [0] * 5
+        c.fittest_cars = [None] * 8
 
     def check_simulation_state(self):
-        if(c.crashed_cars == c.POP_SIZE):
+        if(c.crashed_cars == c.POP_SIZE or 
+           c.keys[pg.K_RETURN]):
             self.create_next_generation()
             self.reset_simulation()
 
     def create_next_generation(self):
         newCars = []
-        fittest_cars = []
-        for i in range(5):
-            fittest_cars += [c.fittest_cars[i]] * int(100 / (2*(i+1)))
 
-        for i in range(5):
+        for i in range(8):
+            max_score = 0
+            for elem in c.cars:
+                score = elem.checkpoint_count
+                if(score > max_score and elem.index not in c.fittest_cars):
+                    max_score = score
+                    c.fittest_cars[i] = elem.index
+
+        fittest_cars = []
+        fittest_cars += [c.fittest_cars[0]] * 40
+        fittest_cars += [c.fittest_cars[1]] * 20
+        fittest_cars += [c.fittest_cars[2]] * 10
+        fittest_cars += [c.fittest_cars[3]] * 10
+        fittest_cars += [c.fittest_cars[4]] * 10
+        fittest_cars += [c.fittest_cars[5]] * 10
+        fittest_cars += [c.fittest_cars[6]] * 10
+        fittest_cars += [c.fittest_cars[7]] * 10
+
+            
+        for i in range(8):
             first_parent = random.choice(fittest_cars)
             second_parent = self.get_second_parent(first_parent, fittest_cars)
 
-            child1 = car.Car(i)
-            child1.net.load_parameters(c.cars[first_parent].net.crossbreed(c.cars[second_parent].net))
+            child1 = car.Car(len(newCars))
+            child1.net.load_params(c.cars[first_parent].net.crossbreed(c.cars[second_parent].net))
             
-            child2 = car.Car(i+1)
-            child2.net.load_parameters(c.cars[first_parent].net.crossbreed(c.cars[second_parent].net))
+            child2 = car.Car(len(newCars) + 1)
+            child2.net.load_params(c.cars[first_parent].net.crossbreed(c.cars[second_parent].net))
 
             newCars.append(child1)
             newCars.append(child2)
 
-        for i in range(c.POP_SIZE - 13):
-            newCars.append(car.Car(13 + i))
-        
         for elem in newCars:
             #elem is a car, but "car is already taken by the module car :("
-            rand = random.uniform(0, 1000)
-            if(rand > 900):
+            rand = random.randint(0, 100)
+            if(random.randint(0, 100) > 96):
                 elem.net.mutate()
 
-        for i in range(3):
-            newCar = car.Car(10 + i)
+        for i in range(c.POP_SIZE - len(newCars) - 5):
+            newCars.append(car.Car(len(newCars)))
+
+        for i in range(5):
+            newCar = car.Car(len(newCars))
             newCar.net = c.cars[c.fittest_cars[i]].net
             newCars.append(newCar)
 
@@ -107,8 +123,11 @@ class Main():
     
     def get_second_parent(self, first_parent, fittest_cars):
         second_parent = random.choice(fittest_cars)
-        if(second_parent == first_parent):
-            second_parent = self.get_second_parent(first_parent, fittest_cars)
+        while True:
+            if(second_parent == first_parent):
+                second_parent = random.choice(fittest_cars)
+            else:
+                break
 
         return second_parent
 
